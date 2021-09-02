@@ -295,10 +295,18 @@ CONTAINS
        FRSNO = State_Met%FRSNO(I,J)
 
        ! Set IsLand, IsWater, IsIce, IsSnow based on max fractional area
-       State_Met%IsLand(I,J)  = (FRLAND_NOSNO_NOICE > MAX(FRWATER, FRICE, FRSNO))
-       State_Met%IsWater(I,J) = (FRWATER > MAX(FRLAND_NOSNO_NOICE, FRICE, FRSNO))
-       State_Met%IsIce(I,J)   = (FRICE > MAX(FRLAND_NOSNO_NOICE, FRWATER, FRSNO))
-       State_Met%IsSnow(I,J)  = (FRSNO > MAX(FRLAND_NOSNO_NOICE, FRWATER, FRICE))
+       State_Met%IsLand(I,J)  = ( State_Met%FRLAND_NOSNO_NOICE(I,J) > MAX(State_Met%FRWATER(I,J),&
+                                                                          State_Met%FRICE(I,J), &
+                                                                          State_Met%FRSNO(I,J)) )
+       State_Met%IsWater(I,J) = ( State_Met%FRWATER(I,J) > MAX(State_Met%FRLAND_NOSNO_NOICE(I,J), &
+                                                               State_Met%FRICE(I,J), &
+                                                               State_Met%FRSNO(I,J)) )
+       State_Met%IsIce(I,J)   = ( State_Met%FRICE(I,J) > MAX(State_Met%FRLAND_NOSNO_NOICE(I,J), &
+                                                             State_Met%FRWATER(I,J), &
+                                                             State_Met%FRSNO(I,J)) )
+       State_Met%IsSnow(I,J)  = ( State_Met%FRSNO(I,J) > MAX(State_Met%FRLAND_NOSNO_NOICE(I,J), &
+                                                             State_Met%FRWATER(I,J), &
+                                                             State_Met%FRICE(I,J)) )
 
     ENDDO
     ENDDO
