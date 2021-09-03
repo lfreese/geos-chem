@@ -54,6 +54,9 @@ MODULE Chem_GridCompMod
   USE Input_Opt_Mod                                  ! Input Options obj
   USE GCHP_Chunk_Mod                                 ! GCHP IRF methods
   USE GCHP_HistoryExports_Mod
+  use pFlogger, only: logging, Logger
+  use MPI
+
 #if !defined( MODEL_GEOS )
   USE GCHP_ProviderServices_Mod
 #endif
@@ -3950,6 +3953,8 @@ CONTAINS
     REAL, POINTER               :: Ptr3D(:,:,:)    => NULL()
     REAL(ESMF_KIND_R8), POINTER :: Ptr2D_R8(:,:)   => NULL()
     REAL(ESMF_KIND_R8), POINTER :: Ptr3D_R8(:,:,:) => NULL()
+    CLASS(Logger), POINTER :: lgr => null()
+    REAL(ESMF_KIND_R8) :: start_time
 
     INTEGER                     :: N, K, NFD
     CHARACTER(LEN=ESMF_MAXSTR)  :: TrcName
@@ -3964,6 +3969,9 @@ CONTAINS
 
     __Iam__('Finalize_')
 
+    lgr => logging%get_logger('GCHPchemFinalize')
+    start_time = MPI_Wtime()
+    call lgr%info('Starting GCHPchem finalize')
     !=======================================================================
     ! Initialization
     !=======================================================================
@@ -3977,10 +3985,16 @@ CONTAINS
     ! Identify this routine to MAPL
     Iam = TRIM(compName)//'::Finalize_'
 
+    call lgr%info('Checkpoint #1 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
+
     ! Get my MAPL_Generic state
     ! -------------------------
     CALL MAPL_GetObjectFromGC(GC, STATE, RC=STATUS)
     _VERIFY(STATUS)
+
+    call lgr%info('Checkpoint #2 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
 
     ! Start timers
     ! ------------
@@ -3996,6 +4010,9 @@ CONTAINS
                    utc      = utc,     &    ! Universal time [hours]
                    localPET = myPet,   &    ! PET # we are on now 
                    __RC__ )
+    
+    call lgr%info('Checkpoint #3 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
 
 #if !defined( MODEL_GEOS )
     !=========================================================================
@@ -4006,6 +4023,9 @@ CONTAINS
     ! Get Internal state
     CALL MAPL_Get ( STATE, INTERNAL_ESMF_STATE=INTSTATE, __RC__ ) 
 
+    call lgr%info('Checkpoint #4 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
+ 
     ! Loop over all species
     DO I = 1, State_Chm%nSpecies
  
@@ -4052,6 +4072,8 @@ CONTAINS
        endif
 #endif
     ENDDO
+    call lgr%info('Checkpoint #5 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
 
     CALL MAPL_GetPointer( INTSTATE, Ptr3d_R8, 'H2O2AfterChem',  &
                           notFoundOK=.TRUE., __RC__ ) 
@@ -4061,6 +4083,8 @@ CONTAINS
     ENDIF
     Ptr3d_R8 => NULL()
     
+    call lgr%info('Checkpoint #6 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     CALL MAPL_GetPointer( INTSTATE, Ptr3d_R8, 'SO2AfterChem',   &
                           notFoundOK=.TRUE., __RC__ ) 
     IF ( ASSOCIATED(Ptr3d_R8) .AND. &
@@ -4068,6 +4092,8 @@ CONTAINS
        Ptr3d_R8(:,:,State_Grid%NZ:1:-1) = State_Chm%SO2AfterChem
     ENDIF
     Ptr3d_R8 => NULL()
+    call lgr%info('Checkpoint #7 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     
     CALL MAPL_GetPointer( INTSTATE, Ptr2d_R8, 'DryDepNitrogen', &
                           notFoundOK=.TRUE., __RC__ ) 
@@ -4076,6 +4102,8 @@ CONTAINS
        Ptr2d_R8 = State_Chm%DryDepNitrogen
     ENDIF
     Ptr2d_R8 => NULL()
+    call lgr%info('Checkpoint #8 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     
     CALL MAPL_GetPointer( INTSTATE, Ptr2d_R8, 'WetDepNitrogen', &
                           notFoundOK=.TRUE., __RC__ ) 
@@ -4084,6 +4112,8 @@ CONTAINS
        Ptr2d_R8 = State_Chm%WetDepNitrogen
     ENDIF
     Ptr2d_R8 => NULL()
+    call lgr%info('Checkpoint #9 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     
     CALL MAPL_GetPointer( INTSTATE, Ptr3d_R8, 'KPPHvalue', &
                           notFoundOK=.TRUE., __RC__ ) 
@@ -4095,6 +4125,8 @@ CONTAINS
     ENDIF
     Ptr3d_R8 => NULL()
 
+    call lgr%info('Checkpoint #10 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     CALL MAPL_GetPointer( INTSTATE, Ptr3d_R8, 'IsorropHplusFine', &
                           notFoundOK=.TRUE., __RC__ )
     IF ( ASSOCIATED(Ptr3d_R8) .AND. &
@@ -4104,6 +4136,8 @@ CONTAINS
     ENDIF
     Ptr3d_R8 => NULL()
 
+    call lgr%info('Checkpoint #11 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     CALL MAPL_GetPointer( INTSTATE, Ptr3d_R8, 'IsorropSulfate', &
                           notFoundOK=.TRUE., __RC__ )
     IF ( ASSOCIATED(Ptr3d_R8) .AND. &
@@ -4113,6 +4147,8 @@ CONTAINS
     ENDIF
     Ptr3d_R8 => NULL()
 
+    call lgr%info('Checkpoint #12 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     CALL MAPL_GetPointer( INTSTATE, Ptr3d_R8, 'IsorropNitrateFine', &
                           notFoundOK=.TRUE., __RC__ )
     IF ( ASSOCIATED(Ptr3d_R8) .AND. &
@@ -4122,6 +4158,8 @@ CONTAINS
     ENDIF
     Ptr3d_R8 => NULL()
 
+    call lgr%info('Checkpoint #13 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     CALL MAPL_GetPointer( INTSTATE, Ptr3d_R8, 'IsorropBisulfate', &
                           notFoundOK=.TRUE., __RC__ )
     IF ( ASSOCIATED(Ptr3d_R8) .AND. &
@@ -4131,6 +4169,8 @@ CONTAINS
     ENDIF
     Ptr3d_R8 => NULL()
 
+    call lgr%info('Checkpoint #14 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     CALL MAPL_GetPointer( INTSTATE, Ptr3d_R8, 'DELP_DRY' , &
                           notFoundOK=.TRUE., __RC__ ) 
     IF ( ASSOCIATED(Ptr3d_R8) .AND. &
@@ -4140,6 +4180,8 @@ CONTAINS
     ENDIF
     Ptr3d_R8 => NULL()
 
+    call lgr%info('Checkpoint #15 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     CALL MAPL_GetPointer( INTSTATE, Ptr2d_R8, 'AREA', &
                           notFoundOK=.TRUE., __RC__ )
     IF ( ASSOCIATED(Ptr2d_R8) .AND. &
@@ -4148,6 +4190,8 @@ CONTAINS
     ENDIF
     Ptr2d_R8 => NULL()
 
+    call lgr%info('Checkpoint #16 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     CALL MAPL_GetPointer( INTSTATE, Ptr3d_R8, 'BXHEIGHT' ,     &
                           notFoundOK=.TRUE., __RC__ )
     IF ( ASSOCIATED(Ptr3d_R8) .AND. &
@@ -4157,6 +4201,8 @@ CONTAINS
     ENDIF
     Ptr3d_R8 => NULL()
 
+    call lgr%info('Checkpoint #17 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     CALL MAPL_GetPointer( INTSTATE, Ptr2d_R8, 'TropLev', &
                           notFoundOK=.TRUE., __RC__ )
     IF ( ASSOCIATED(Ptr2d_R8) .AND. &
@@ -4166,16 +4212,22 @@ CONTAINS
     Ptr2d_R8 => NULL()
 #endif
 
+    call lgr%info('Checkpoint #18 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     ! Destroy the internal alarms
     call ESMF_UserCompGetInternalState(GC,'gcchem_internal_alarms',GC_alarm_wrapper,status)
     _ASSERT(status==0,'Could not find GC alarms for destruction')
 
+    call lgr%info('Checkpoint #19 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     GC_alarms => GC_alarm_wrapper%ptr
     call ESMF_AlarmDestroy(GC_alarms%RRTMG_alarm,rc=status)
     _ASSERT(status==0,'Could not destroy radiation alarm')
     deallocate(GC_alarms,stat=status)
     _ASSERT(status==0,'Could not deallocate GC alarms')
 
+    call lgr%info('Checkpoint #20 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     !=======================================================================
     ! Finalize the Gridded Component
     !=======================================================================
@@ -4223,6 +4275,8 @@ CONTAINS
        ENDIF
     ENDIF
 
+    call lgr%info('Checkpoint #21 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     ! Deallocate fields of the Chemistry State object
     CALL Cleanup_State_Chm( State_Chm, RC )
     IF ( Input_Opt%AmIRoot ) THEN
@@ -4233,6 +4287,9 @@ CONTAINS
        ENDIF
     ENDIF
 
+    call lgr%info('Checkpoint #22 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
+    ! Deallocate fields of the Chemistry State object
     ! Deallocate fields of the Diagnostics State object
     CALL Cleanup_State_Diag( State_Diag, RC )
     IF ( Input_Opt%AmIRoot ) THEN
@@ -4243,6 +4300,9 @@ CONTAINS
        ENDIF
     ENDIF
 
+    call lgr%info('Checkpoint #23 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
+    ! Deallocate fields of the Chemistry State object
     ! Deallocate fields of the Grid State object
     CALL Cleanup_State_Grid( State_Grid, RC )
     IF ( Input_Opt%AmIRoot ) THEN
@@ -4253,6 +4313,9 @@ CONTAINS
        ENDIF
     ENDIF
 
+    call lgr%info('Checkpoint #24 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
+    ! Deallocate fields of the Chemistry State object
     ! Deallocate fields of the Meteorology State object
     CALL Cleanup_State_Met( State_Met, RC )
     IF ( Input_Opt%AmIRoot ) THEN
@@ -4263,6 +4326,8 @@ CONTAINS
        ENDIF
     ENDIF
 
+    call lgr%info('Checkpoint #25 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
 #if !defined( MODEL_GEOS )
     ! Deallocate fields of the Input Options object
     ! The call to Cleanup_Input_Opt causes a memory leak error. Comment
@@ -4286,6 +4351,8 @@ CONTAINS
        DEALLOCATE(Int2Spc)
     ENDIF
 
+    call lgr%info('Checkpoint #26 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
 #ifdef ADJOINT
     ! Free Int2Adj pointer
     IF ( ASSOCIATED(Int2Adj) ) THEN
@@ -4299,14 +4366,20 @@ CONTAINS
     ! Deallocate the history interface between GC States and ESMF Exports
     CALL Destroy_HistoryConfig( am_I_Root, HistoryConfig, RC )
 
+    call lgr%info('Checkpoint #27 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
 #if !defined( MODEL_GEOS )
     ! Deallocate provide pointers and arrays
     CALL Provider_Finalize( am_I_Root, __RC__ )
 #endif
 
+    call lgr%info('Checkpoint #28 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     ! Finalize MAPL Generic
     CALL MAPL_GenericFinalize( GC, Import, Export, Clock, __RC__ )
 
+    call lgr%info('Checkpoint #29 reach after %f7.1 seconds', MPI_Wtime() - start_time)
+    start_time = MPI_Wtime()
     !=======================================================================
     ! All done
     !=======================================================================
@@ -4315,6 +4388,8 @@ CONTAINS
     ! -----------
 !    CALL MAPL_TimerOff(STATE, "FINALIZE")
 !    CALL MAPL_TimerOff(STATE, "TOTAL")
+
+    call lgr%info('Ending GCHPchem finalize after %f7.1 seconds', MPI_Wtime() - start_time)
 
     ! Successful return
     _RETURN(ESMF_SUCCESS)
