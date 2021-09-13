@@ -181,7 +181,7 @@
     State_Met%OMEGA(:,:,:)     = State_Met%OMEGA(:,:,z_ub:z_lb:-1)
   end if
 
-  State_Met%SPHU                =(State_Met%SPHU1+State_Met%SPHU2)*0.5d3 ! kg/kg -> g/kg
+  State_Met%SPHU                =(State_Met%SPHU1+State_Met%SPHU2)*0.5d0 ! kg/kg -> g/kg
   State_Met%T                   =(State_Met%TMPU1+State_Met%TMPU2)*0.5d0 ! K
 
   ! Create total optical depth field                         ! 1
