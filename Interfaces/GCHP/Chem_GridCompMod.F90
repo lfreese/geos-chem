@@ -1404,7 +1404,23 @@ CONTAINS
                                   Label="HEMCO_CONFIG:", &
                                   Default="HEMCO_Config.rc", __RC__ )
     CALL HCO_SetServices( MAPL_am_I_Root(), GC, HcoConfig,  &
-                          TRIM(HcoConfigFile), __RC__ )    
+                          TRIM(HcoConfigFile), __RC__ )
+
+                          
+    CALL MAPL_AddExportSpec(GC,        &
+       SHORT_NAME         = 'HCO_WLI', &
+       UNITS              = '1',  &
+       DIMS               = MAPL_DimsHorzOnly, &
+       RC                 = STATUS     )
+    _ASSERT(STATUS == 0,  'Failed to add my export')
+   
+
+    CALL MAPL_AddExportSpec(GC,        &
+       SHORT_NAME         = 'HCO_LandType', &
+       UNITS              = '1',  &
+       DIMS               = MAPL_DimsHorzOnly, &
+       RC                 = STATUS     )
+    _ASSERT(STATUS == 0,  'Failed to add my export')
 
     ! Set the Profiling timers
     ! ------------------------
@@ -2641,10 +2657,14 @@ CONTAINS
 !
 ! !INPUT/OUTPUT PARAMETERS:
 !
+   USE HCO_State_GC_Mod,        ONLY : HcoState
+   USE HCO_GeoTools_Mod,        ONLY : HCO_LandType
     TYPE(ESMF_GridComp), INTENT(INOUT) :: GC       ! Ref to this GridComp
     TYPE(ESMF_State),    INTENT(INOUT) :: Import   ! Import State
     TYPE(ESMF_State),    INTENT(INOUT) :: Export   ! Export State
     TYPE(ESMF_Clock),    INTENT(INOUT) :: Clock    ! ESMF Clock object
+    REAL, POINTER                :: HCO_LandType(:,:) => NULL()
+    REAL, POINTER                :: HCO_WLI(:,:) => NULL()
 !
 ! !OUTPUT PARAMETERS:
 !
@@ -2687,6 +2707,21 @@ CONTAINS
 
     ! Call run routine stage 2
     CALL Run_ ( GC, IMPORT, EXPORT, CLOCK, PHASE, __RC__ )
+    
+    call MAPL_GetPointer ( EXPORT, HCO_LandType, 'HCO_LandType',  RC=STATUS )
+    _VERIFY(STATUS)
+
+
+    call MAPL_GetPointer ( EXPORT, HCO_WLI, 'HCO_WLI',  RC=STATUS )
+    _VERIFY(STATUS)
+
+    DO J = 1, HcoState%NY
+    DO I = 1, HcoState%NX
+       HCO_WLI (I,J) = HCO_LANDTYPE( ExtState%WLI%Arr%Val(I,J), ExtState%ALBD%Arr%Val(I,J) )
+       HCO_LandType(I,J) = ExtState%WLI%Arr%Val(I,J)
+    ENDDO
+    ENDDO
+    
 
     ! Return w/ success
     _RETURN(ESMF_SUCCESS)
