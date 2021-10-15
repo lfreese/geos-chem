@@ -2767,13 +2767,43 @@ CONTAINS
     ! Photolysis directory
     !-----------------------------------------------------------------
 
-    ! Root data dir
+    ! Turn on Fast-JX?
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'Use_FastJX', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%Use_FastJX
+
+    ! Turn on CloudJ?
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'Use_CloudJ', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), * ) Input_Opt%Use_CloudJ
+
+    ! Only allow using Fast-JX or Cloud-J. Do not allow both or none.
+    IF ( Input_Opt%Use_FastJX .EQV. Input_Opt%Use_CloudJ ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+
+    ! Root data dir for Fast-JX
     CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'FAST_JX_DIR', RC )
     IF ( RC /= GC_SUCCESS ) THEN
        CALL GC_Error( ErrMsg, RC, ThisLoc )
        RETURN
     ENDIF
     READ( SUBSTRS(1:N), '(a)' ) Input_Opt%FAST_JX_DIR
+
+    ! Root data dir for Cloud-J
+    CALL SPLIT_ONE_LINE( SUBSTRS, N, 1, 'CloudJ_Dir', RC )
+    IF ( RC /= GC_SUCCESS ) THEN
+       CALL GC_Error( ErrMsg, RC, ThisLoc )
+       RETURN
+    ENDIF
+    READ( SUBSTRS(1:N), '(a)' ) Input_Opt%CloudJ_Dir
 
     ! Make sure PHOTOLYSIS-DIR ends with a "/" character
     C = LEN_TRIM( Input_Opt%FAST_JX_DIR )
@@ -2797,8 +2827,10 @@ CONTAINS
     IF ( Input_Opt%amIRoot ) THEN
        WRITE( 6, '(/,a)' ) 'PHOTOLYSIS MENU'
        WRITE( 6, '(  a)' ) '---------------'
-       WRITE( 6, 110 ) 'FAST_JX Directory           : ', &
-                        TRIM( Input_Opt%FAST_JX_DIR )
+       WRITE( 6, 110 ) 'Use FAST-JX           : ', Input_Opt%Use_FastJX
+       WRITE( 6, 110 ) 'Use Cloud-J           : ', Input_Opt%Use_CloudJ
+       WRITE( 6, 110 ) 'FAST_JX Directory     : ', TRIM( Input_Opt%FAST_JX_DIR )
+       WRITE( 6, 110 ) 'Cloud-J Directory     : ', TRIM( Input_Opt%CloudJ_Dir )
     ENDIF
 
     ! Format statements
