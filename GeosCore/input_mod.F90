@@ -2827,15 +2827,16 @@ CONTAINS
     IF ( Input_Opt%amIRoot ) THEN
        WRITE( 6, '(/,a)' ) 'PHOTOLYSIS MENU'
        WRITE( 6, '(  a)' ) '---------------'
-       WRITE( 6, 110 ) 'Use FAST-JX           : ', Input_Opt%Use_FastJX
-       WRITE( 6, 110 ) 'Use Cloud-J           : ', Input_Opt%Use_CloudJ
+       WRITE( 6, 100 ) 'Use FAST-JX           : ', Input_Opt%Use_FastJX
+       WRITE( 6, 100 ) 'Use Cloud-J           : ', Input_Opt%Use_CloudJ
        WRITE( 6, 110 ) 'FAST_JX Directory     : ', TRIM( Input_Opt%FAST_JX_DIR )
        WRITE( 6, 110 ) 'Cloud-J Directory     : ', TRIM( Input_Opt%CloudJ_Dir )
     ENDIF
 
     ! Format statements
-100 FORMAT( A, I8.8, 1X, I6.6 )
+100 FORMAT( A, L5  )
 110 FORMAT( A, A              )
+
 
   END SUBROUTINE READ_PHOTOLYSIS_MENU
 !EOC
