@@ -91,7 +91,13 @@ CONTAINS
 ! !USES:
 !
     USE AEROSOL_MOD,        ONLY : SOILDUST, AEROSOL_CONC, RDAER
-    USE CMN_FJX_MOD
+#ifndef CLOUDJ
+    USE CMN_FJX_MOD,        ONLY : JVN_, ZPJ, GC_PHOTO_ID
+#else
+    USE CldJ_Cmn_Mod,       ONLY : JVN_
+    USE CMN_FJX_MOD,        ONLY : ZPJ, GC_PHOTO_ID
+    ! JVN_ in Cloud-J but others are not
+#endif
     USE DUST_MOD,           ONLY : RDUST_ONLINE
     USE ErrCode_Mod
     USE ERROR_MOD

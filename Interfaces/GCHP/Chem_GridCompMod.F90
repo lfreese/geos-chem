@@ -331,7 +331,12 @@ CONTAINS
     USE inquireMod,           ONLY : findFreeLUN
     USE FILE_MOD,             ONLY : IOERROR
 #if defined( MODEL_GEOS )
+!#ifndef CLOUDJ
     USE CMN_FJX_MOD
+!#else
+    ! Not yet sure what is used
+!#endif
+#endif
     USE GCKPP_Monitor
     USE GCKPP_Parameters
     USE Precision_Mod
@@ -2711,7 +2716,11 @@ CONTAINS
     ! To archive selected reaction rates
     USE GCKPP_Parameters
     USE GCKPP_Monitor
+#ifndef CLOUDJ
     USE CMN_FJX_MOD,             ONLY : JVN_
+#else
+    USE CldJ_Cmn_Mod,            ONLY : JVN_
+#endif
 #endif
 
 !

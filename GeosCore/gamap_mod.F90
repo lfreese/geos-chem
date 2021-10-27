@@ -1043,7 +1043,11 @@ CONTAINS
 !
 ! !USES:
 !
+#ifndef CLOUDJ
     USE CMN_FJX_MOD,        ONLY : W_
+#else
+    USE CldJ_Cmn_Mod,       ONLY : W_
+#endif
     USE CMN_SIZE_MOD,       ONLY : NRHAER, NDUST, NSTRATAER
     USE DIAG03_MOD,         ONLY : ND03, PD03, PD03_PL
     USE DIAG53_MOD,         ONLY : ND53, PD53
