@@ -39,7 +39,6 @@ Hg0:
   Is_Advected: true
   Is_DryDep: true
   Is_Gas: true
-  Is_Hg0: true
   MW_g: 200.59
 Hg_CHEM_PROP: &HgChemProperties
   Henry_CR: 8.40e+03
