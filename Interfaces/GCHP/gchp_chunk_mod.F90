@@ -606,6 +606,9 @@ CONTAINS
     USE Emissions_Mod,      ONLY : Emissions_Run
     USE Mixing_Mod,         ONLY : Do_Tend, Do_Mixing
     USE WetScav_Mod,        ONLY : Setup_WetScav, Do_WetDep
+    USE MERCURY_MOD           ! For offline Hg simulation (driver)
+    USE OCEAN_MERCURY_MOD     ! For offline Hg simulation (ocean model)
+    USE DEPO_MERCURY_MOD      ! Deposition for offline Hg simulation
 
     ! HEMCO components (eventually moved to a separate GridComp?)
     USE HCO_State_GC_Mod,   ONLY : HcoState, ExtState
@@ -1315,6 +1318,22 @@ CONTAINS
        ENDIF
 #endif
 
+      ! Read data required for Hg2 gas-particle partitioning
+      ! (H Amos, 25 Oct 2011)
+      IF ( Input_Opt%ITS_A_MERCURY_SIM .and. (.not. Input_Opt%DryRun) ) THEN
+         CALL Read_Hg2_Partitioning( Input_Opt, State_Grid, State_Met, &
+                                     MONTH,     RC )
+         ! Optional memory prints (level >= 3)
+         if ( MemDebugLevel > 0 ) THEN
+            call ESMF_VMBarrier(VM, RC=STATUS)
+            _VERIFY(STATUS)
+            call MAPL_MemUtilsWrite(VM, &
+                    'gchp_chunk_run:, Read_Hg2_Partitioning', RC=STATUS )
+            _VERIFY(STATUS)
+         endif
+
+      ENDIF
+
        ! Optional memory prints (level >= 3)
        if ( MemDebugLevel > 0 ) THEN
           call ESMF_VMBarrier(VM, RC=STATUS)
@@ -1323,22 +1342,7 @@ CONTAINS
                   'gchp_chunk_run:, before Do_Chemistry', RC=STATUS )
           _VERIFY(STATUS)
        endif
-      ! Read data required for Hg2 gas-particle partitioning
-      ! (H Amos, 25 Oct 2011)
-      IF ( ITS_A_MERCURY_SIM .and. notDryRun ) THEN
-         CALL Read_Hg2_Partitioning( Input_Opt, State_Grid, State_Met, &
-                                     MONTH,     RC )
 
-         ! Trap potential errors
-         IF ( RC /= GC_SUCCESS ) THEN
-            ErrMsg = 'Error encountered in "Read_Hg2_Partitioning"!'
-            CALL Error_Stop( ErrMsg, ThisLoc )
-         ENDIF
-
-         IF ( prtDebug ) THEN
-            CALL Debug_Msg( '### MAIN: a READ_HG2_PARTITIONING')
-         ENDIF
-      ENDIF
        ! Do chemistry
        CALL Do_Chemistry( Input_Opt, State_Chm, State_Diag, &
                           State_Grid, State_Met, RC )
